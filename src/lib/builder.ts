@@ -1,9 +1,10 @@
 import path from 'path';
 import PQueue from 'p-queue';
 import fg from 'fast-glob';
+import { existsSync } from 'fs';
 
 import type { Repository, TreeNode } from './types.js';
-import { logger, mkdir, readJSON, writeFile } from './utils.js';
+import { logger, mkdir, readJSON, writeFile, exists } from './utils.js';
 import { buildDoc } from './doc.js';
 import { buildTree } from './tree.js';
 import { config } from '../config.js';
@@ -28,7 +29,7 @@ export async function build() {
   const tasks: (() => Promise<void>)[] = [];
   for (const { node } of tree) {
     const fullPath = path.join(outputDir, node.filePath);
-    logger.success(fullPath);
+    // logger.success(fullPath);
 
     switch (node.type) {
       case 'TITLE':
@@ -46,10 +47,16 @@ export async function build() {
       case 'DRAFT_DOC':
       case 'DOC':
         tasks.push(async () => {
-          const doc = await buildDoc(node, tree.docs);
-          const fullPath = path.join(outputDir, `${doc.filePath}.md`);
-          logger.success(`Building doc: ${fullPath}`);
-          await writeFile(fullPath, doc.content);
+          const fullPath = path.join(outputDir, `${node.filePath}.md`);
+          if (!existsSync(fullPath)) {
+            try {  
+              const doc = await buildDoc(node, tree.docs);
+              logger.success(` - Saving doc: ${fullPath}`);
+              await writeFile(fullPath, doc.content);
+            } catch (error) {
+              logger.error(`saving ${fullPath}` + error)
+            }
+          }
         });
         break;
 

@@ -56,6 +56,7 @@ export async function crawlRepo(namespace: string) {
   const repo = await sdk.getRepoDetail(namespace);
   const toc = yaml.parse(repo.toc_yml);
   const docList = await sdk.getDocs(namespace);
+  logger.success(` ❤️ doc number: ${docList.length}`);
 
   await saveToStorage(`${namespace}/repo.json`, repo);
   await saveToStorage(`${namespace}/toc.json`, toc);
@@ -64,7 +65,7 @@ export async function crawlRepo(namespace: string) {
   // crawl repo docs
   const docs = await taskQueue.addAll(docList.map(doc => {
     return async () => {
-      logger.success(` - [${doc.title}](${host}/${namespace}/${doc.slug})`);
+      // logger.success(` - [${doc.title}](${host}/${namespace}/${doc.slug})`);
       const docDetail = await sdk.getDocDetail(namespace, doc.slug);
       await saveToStorage(`${namespace}/docs/${doc.slug}.json`, docDetail);
     };
