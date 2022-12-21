@@ -2,7 +2,7 @@ node_modules/
 coverage/
 logs/
 .idea/
-.vscode/
+# .vscode/
 run/
 .DS_Store
 *.swp
